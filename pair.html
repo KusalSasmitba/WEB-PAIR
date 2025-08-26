@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moonlight MD Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;width:100%;font-family:'Roboto',sans-serif;color:#fff;overflow:hidden;}
+
+  /* Background image + blur/glass */
+  body{
+    background: url('https://i.postimg.cc/7L1g4jGL/HD-wallpaper-anime-landscape-polychromatic-blue-theme-scenic-trees-lake-anime.jpg') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+  }
+  body::before{
+    content:"";
+    position: absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    z-index:0;
+  }
+
+  .container{position:relative; z-index:2; display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;width:100%;padding:20px;}
+
+  .header{text-align:center;margin-bottom:20px;animation:fadeIn 1s ease-in-out;}
+  .header h1{font-family:'Orbitron',sans-serif;font-size:2rem;color:#25d366;text-shadow:0 0 10px #25d366,0 0 20px #00aaff;animation:neonGlow 1.5s infinite alternate;}
+  .header .emoji{font-size:28px;animation:bounce 1.5s infinite alternate;}
+
+  .info-cards{display:flex;flex-wrap:wrap;justify-content:center;margin-bottom:20px;gap:10px;width:100%;}
+  .card{background:rgba(0,0,0,0.5);padding:15px 20px;border-radius:15px;min-width:120px;text-align:center;box-shadow:0 0 10px #25d366,0 0 20px #00aaff;animation:fadeIn 1s ease-in-out;}
+  .card i{font-size:18px;margin-bottom:5px;color:#00aaff;}
+  .card span{display:block;font-weight:bold;margin-top:5px;font-size:14px;}
+
+  .input-container{display:flex;width:100%;margin-bottom:20px;border-radius:50px;overflow:hidden;background:rgba(0,0,0,0.4);box-shadow:inset 0 0 8px rgba(255,255,255,0.1);}
+  .input-container input{flex:1;padding:15px;border:none;background:transparent;color:#fff;font-size:16px;outline:none;caret-color:#00aaff;}
+  .input-container button{background:#25d366;border:none;padding:0 20px;cursor:pointer;font-weight:bold;letter-spacing:1px;box-shadow:0 0 10px #25d366;transition:all 0.3s ease;}
+  .input-container button:hover{background:#1ebe57;box-shadow:0 0 20px #00aaff,0 0 40px #25d366;}
+
+  #pair{margin-top:10px;font-size:18px;color:#00aaff;cursor:pointer;animation:glowText 2s ease-in-out infinite alternate;text-align:center;}
+  #loading-spinner{margin-top:10px;display:none;color:#00aaff;}
+  .fa-spinner{animation:spin 1.5s linear infinite;}
+
+  .credits{margin-top:20px;font-size:12px;color:#888;line-height:1.4;text-align:center;}
+  .credits span{color:#25d366;font-weight:bold;}
+  .credits a{color:#25d366;text-decoration:none;font-weight:bold;}
+  .credits a:hover{text-shadow:0 0 10px #25d366,0 0 20px #00aaff;}
+
+  @keyframes neonGlow{from{text-shadow:0 0 10px #25d366,0 0 20px #00aaff;}to{text-shadow:0 0 20px #25d366,0 0 40px #00aaff;} }
+  @keyframes bounce{0%{transform:translateY(0);}50%{transform:translateY(-10px);}100%{transform:translateY(0);} }
+  @keyframes glowText{0%{text-shadow:0 0 5px #00aaff;}100%{text-shadow:0 0 20px #00aaff,0 0 30px #25d366;} }
+  @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(-20px);}to{opacity:1;transform:translateY(0);} }
+  @media(max-width:500px){.info-cards{flex-direction:column;gap:10px;} }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Moonlight MD <span class="emoji">✨</span></h1>
+  </div>
+
+  <div class="info-cards">
+    <div class="card"><i class="fas fa-battery-full"></i><span id="battery">Battery: --%</span></div>
+    <div class="card"><i class="fas fa-wifi"></i><span id="network">Network: --</span></div>
+    <div class="card"><i class="fas fa-desktop"></i><span id="ip">IP: --</span></div>
+  </div>
+
+  <div class="input-container">
+    <input type="number" id="number" placeholder="+94704xxxxxx">
+    <button id="submit">Submit</button>
+  </div>
+
+  <div id="loading-spinner"><i class="fas fa-spinner fa-spin"></i></div>
+  <main id="pair"></main>
+
+  <div class="credits">
+    Owner: <span>KSasmitha</span> <br>
+    Special Thnx: <span><a href="https://king-sandesh-md-ofc-web.pages.dev" target="_blank">King Sandesh MD</a></span> <br>
+    Bot Name: <span>Moonlight MD</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+<script>
+const batteryEl=document.getElementById("battery");
+const networkEl=document.getElementById("network");
+const ipEl=document.getElementById("ip");
+const pairOutput=document.getElementById("pair");
+const submitBtn=document.getElementById("submit");
+const numberInput=document.getElementById("number");
+const spinner=document.getElementById("loading-spinner");
+
+// Battery
+if(navigator.getBattery){
+  navigator.getBattery().then(battery=>{
+    function updateBattery(){batteryEl.innerText='Battery: '+Math.floor(battery.level*100)+'%';}
+    updateBattery();
+    battery.addEventListener('levelchange',updateBattery);
+  });
+}else{batteryEl.innerText='Battery: N/A';}
+
+// Network
+if(navigator.connection){networkEl.innerText='Network: '+navigator.connection.effectiveType;}else{networkEl.innerText='Network: Unknown';}
+
+// IP
+fetch('https://api.ipify.org?format=json').then(res=>res.json()).then(data=>{ipEl.innerText='IP: '+data.ip;});
+
+// Copy code function
+async function copyToClipboard(){
+  const codeEl=document.getElementById("copy");
+  if(!codeEl)return;
+  const text=codeEl.innerText.replace('CODE: ','');
+  await navigator.clipboard.writeText(text);
+  codeEl.innerText="✔️ COPIED";codeEl.style.color="#00aaff";
+  setTimeout(()=>{codeEl.innerText="CODE: "+text;codeEl.style.color="#00aaff";},1500);
+}
+
+// Submit button
+submitBtn.addEventListener("click",async e=>{
+  e.preventDefault();
+  const value=numberInput.value.replace(/\D/g,'');
+  if(!value){pairOutput.innerHTML='<span style="color:#ff5555;font-weight:bold">❗ Enter your WhatsApp number with country code.</span>';return;}
+  if(value.length<11){pairOutput.innerHTML='<span style="color:#ff5555;font-weight:bold">❗ Invalid number format. Please try again.</span>';return;}
+  numberInput.type="text";numberInput.value="+"+value;
+  spinner.style.display="block";pairOutput.innerHTML="";
+  try{
+    const {data}=await axios(`/code?number=${value}`);
+    const code=data.code||"❗ Service Unavailable";
+    pairOutput.innerHTML=`<span id="copy" onclick="copyToClipboard()" style="color:#00aaff;font-weight:bold;cursor:pointer">CODE: ${code}</span>`;
+  }catch(err){pairOutput.innerHTML='<span style="color:#ff5555;font-weight:bold">❗ Error fetching code. Try again.</span>';}
+  finally{spinner.style.display="none";}
+});
+</script>
+</body>
+</html>

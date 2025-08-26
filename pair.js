@@ -83,9 +83,9 @@ router.get("/", async (req, res) => {
             const string_session = mega_url.replace("https://mega.nz/file/", "");
 
             // Construct caption
-            const caption = `*𝑀𝑜𝑜𝓃𝓁𝒾𝑔𝒽𝓉 𝑀𝐷* 💙\n\n${string_session} 👈\n\n*This is your Session ID, copy this id and paste into config.js*\n\n*You can ask any question using this link*\n\n> *https://wa.me/+94752425527*\n\n*You can join my WhatsApp channel*\n\n> *https://whatsapp.com/channel/0029Vb6SeNIADTOJO7xAQV12*`;
+            const caption = `*𝐌𝐨𝐨𝐧𝐥𝐢𝐠𝐡𝐭 𝐌𝐃* 💙\n\n`${string_session} 🙌`\n\n*This is your Session ID, copy this id and paste into config.js*\n\n*You can ask any question using this link*\n> *https://wa.me/+94752425527*\n\n*You can join my WhatsApp channel*\n*https://whatsapp.com/channel/0029Vb6SeNIADTOJO7xAQV12*\𝐧\𝐧 > ᴘᴏᴡᴇʀᴇᴅ ʙʏ 𝐌𝐨𝐨𝐧𝐥𝐢𝐠𝐡𝐭 🌓`;
 
-            const warning = `🛑 *Do not share this code to anyone* 🛑`;
+            const warning = `Do  not share this code to anyone🧸`;
 
             // Send session image + caption + contextInfo
             await RobinPairWeb.sendMessage(user_jid, {

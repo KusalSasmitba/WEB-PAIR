@@ -13,6 +13,7 @@ const {
 } = require("@whiskeysockets/baileys");
 const { upload } = require("./mega");
 
+// Remove folder/file helper
 function removeFile(FilePath) {
   if (!fs.existsSync(FilePath)) return false;
   fs.rmSync(FilePath, { recursive: true, force: true });
@@ -20,6 +21,7 @@ function removeFile(FilePath) {
 
 router.get("/", async (req, res) => {
   let num = req.query.number;
+
   async function RobinPair() {
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
     try {
@@ -36,6 +38,7 @@ router.get("/", async (req, res) => {
         browser: Browsers.macOS("Safari"),
       });
 
+      // Pairing if not registered
       if (!RobinPairWeb.authState.creds.registered) {
         await delay(1500);
         num = num.replace(/[^0-9]/g, "");
@@ -46,12 +49,12 @@ router.get("/", async (req, res) => {
       }
 
       RobinPairWeb.ev.on("creds.update", saveCreds);
+
       RobinPairWeb.ev.on("connection.update", async (s) => {
         const { connection, lastDisconnect } = s;
         if (connection === "open") {
           try {
             await delay(10000);
-            const sessionPrabath = fs.readFileSync("./session/creds.json");
 
             const auth_path = "./session/";
             const user_jid = jidNormalizedUser(RobinPairWeb.user.id);
@@ -71,34 +74,46 @@ router.get("/", async (req, res) => {
               return `${result}${number}`;
             }
 
+            // Upload creds.json to Mega
             const mega_url = await upload(
               fs.createReadStream(auth_path + "creds.json"),
               `${randomMegaId()}.json`
             );
 
-            const string_session = mega_url.replace(
-              "https://mega.nz/file/",
-              ""
-            );
+            const string_session = mega_url.replace("https://mega.nz/file/", "");
 
-            const sid = `*𝑀𝑜𝑜𝓃𝓁𝒾𝑔𝒽𝓉 𝑀𝒟* 💙\n\n ${string_session} 👈\n\n*This is the your Session ID, copy this id and paste into config.js file*\n\n*You can ask any question using this link*\n\n> *wa.me/+94752425527*\n\n*You can join my whatsapp channel*\n\n> *https://whatsapp.com/channel/0029Vb6SeNIADTOJO7xAQV12*`;
-            const mg = `🛑 *Do not share this code to anyone* 🛑`;
-            const dt = await RobinPairWeb.sendMessage(user_jid, {
-              image: {
-                url: "https://files.catbox.moe/rv220b.jpg",
+            // Construct caption
+            const caption = `*𝑀𝑜𝑜𝓃𝓁𝒾𝑔𝒽𝓉 𝑀𝐷* 💙\n\n${string_session} 👈\n\n*This is your Session ID, copy this id and paste into config.js*\n\n*You can ask any question using this link*\n\n> *https://wa.me/+94752425527*\n\n*You can join my WhatsApp channel*\n\n> *https://whatsapp.com/channel/0029Vb6SeNIADTOJO7xAQV12*`;
+
+            const warning = `🛑 *Do not share this code to anyone* 🛑`;
+
+            // Send session image + caption + contextInfo
+            await RobinPairWeb.sendMessage(user_jid, {
+              image: { url: "https://files.catbox.moe/rv220b.jpg" },
+              caption: caption,
+              contextInfo: {
+                forwardingScore: 999,
+                isForwarded: true,
+                forwardedNewsletterMessageInfo: {
+                  newsletterJid: "0029Vb6SeNIADTOJO7xAQV12@newsletter",
+                  newsletterName: "𝐌𝐨𝐨𝐧𝐥𝐢𝐠𝐡𝐭 𝐌𝐃",
+                  serverMessageId: 101,
+                },
               },
-              caption: sid,
             });
-            const msg = await RobinPairWeb.sendMessage(user_jid, {
-              text: string_session,
-            });
-            const msg1 = await RobinPairWeb.sendMessage(user_jid, { text: mg });
+
+            // Send string_session text
+            await RobinPairWeb.sendMessage(user_jid, { text: string_session });
+
+            // Send warning message
+            await RobinPairWeb.sendMessage(user_jid, { text: warning });
           } catch (e) {
+            console.log("Error sending messages, restarting bot:", e);
             exec("pm2 restart prabath");
           }
 
           await delay(100);
-          return await removeFile("./session");
+          removeFile("./session");
           process.exit(0);
         } else if (
           connection === "close" &&
@@ -111,15 +126,16 @@ router.get("/", async (req, res) => {
         }
       });
     } catch (err) {
+      console.log("Service error, restarting:", err);
       exec("pm2 restart Robin-md");
-      console.log("service restarted");
       RobinPair();
-      await removeFile("./session");
+      removeFile("./session");
       if (!res.headersSent) {
         await res.send({ code: "Service Unavailable" });
       }
     }
   }
+
   return await RobinPair();
 });
 
